@@ -9,12 +9,6 @@
 //* TODO: 6. Create method to toggle complete Note
 //* TODO: 7. Create method to toggle important Note
 //* TODO: 8. Create method to display notes
-// {
-//  noteText: text,
-//  noteID:
-//  isCompelted: false
-//  isImportant: false
-// }
 
 // Note Contructor
 
@@ -77,14 +71,26 @@ const noteApp = {
     },
 };
 
-// TODO: CREATE DOM OBJECT
-// TODO: 1. CREATE DOM STRINGS
-// TODO: 2.CREATE A METHOD TO ADD A TODO TO THE DOM
+//* TODO: CREATE DOM OBJECT
+//* TODO: 1. CREATE DOM STRINGS
+//* TODO: 2.CREATE A METHOD TO ADD A TODO TO THE DOM
+
 const DOM = {
     DOMStrings: {
         noteInput: '.note-app-input',
         noteWrapper: '.note-wrapper',
         emptyDefaultCells: '.empty-cells-default',
+        notes: '.notes',
+        closeIcon: 'fas fa-times-circle fa-2x close-icon',
+        compeletedIcon: 'fas fa-check fa-2x complete-icon',
+        importantIcon: 'fas fa-exclamation fa-2x important-icon',
+        reminderIcon: 'fas fa-bell fa-2x reminder-icon',
+        editModal: '#edit-modal',
+        noteFooter: '.note-footer',
+        emptyCells: '.empty-cells',
+        container: '.container',
+        editNoteInput: '.edit-note-input',
+        noteContent: '.note-content',
     },
     editNoteId: -1,
     displayNotes() {
@@ -129,12 +135,12 @@ const DOM = {
         emptyCell.innerHTML += htmlNew;
 
         noteInput.value = '';
-
+        handlers.editNoteEvent();
         this.displayNoteTime();
         handlers.dragNDrop();
     },
     reAssignDOMIds() {
-        const notes = Array.from( document.querySelectorAll( '.notes' ) );
+        const notes = Array.from( document.querySelectorAll( this.DOMStrings.notes ) );
         notes.forEach( ( note, index ) => {
             note.id = index;
         } );
@@ -145,7 +151,7 @@ const DOM = {
         const noteContainer = e.target.parentElement.parentElement;
         const noteWrapper = e.target.parentElement.parentElement.parentElement;
         // CLOSE ICON
-        if ( e.target.className === 'fas fa-times-circle fa-2x close-icon' ) {
+        if ( e.target.className === this.DOMStrings.closeIcon ) {
             // Remove note from the app
             noteApp.removeNote( Number( noteContainer.id ) );
             // Remove note from dom
@@ -155,7 +161,7 @@ const DOM = {
         }
     },
     isCompletedDOMNote( e ) {
-        if ( e.target.className.includes( 'fas fa-check fa-2x complete-icon' ) ) {
+        if ( e.target.className.includes( this.DOMStrings.compeletedIcon ) ) {
             const noteContainer = e.target.parentElement.parentElement;
             const noteToolbar = e.target.parentElement;
             const noteText = e.target.parentElement.nextElementSibling.children[ 0 ];
@@ -170,7 +176,7 @@ const DOM = {
     },
 
     isImportantDOMNote( e ) {
-        if ( e.target.className.includes( 'fas fa-exclamation fa-2x important-icon' ) ) {
+        if ( e.target.className.includes( this.DOMStrings.importantIcon ) ) {
             const noteContainer = e.target.parentElement.parentElement;
             const noteToolbar = e.target.parentElement;
             const noteText = e.target.parentElement.nextElementSibling.children[ 0 ];
@@ -183,13 +189,40 @@ const DOM = {
             noteIcon.classList.toggle( 'isImportantIcon' );
         }
     },
-    editDOMNote( e ) {
-        if ( e.target.className.includes( 'fas fa-bell fa-2x reminder-icon' ) ) {
-            this.editNoteId = Number( e.target.parentElement.parentElement.id );
-            const editModal = document.querySelector( '#edit-modal' );
-            editModal.classList.toggle( 'modal-show' );
+    editNote( e ) {
+        if ( e.target.tagName === 'P' ) {
+            const note = e.target.parentElement.parentElement;
+            const noteID = Number( e.target.parentElement.parentElement.id );
+            const p = e.target;
+            const pOldText = e.target.textContent;
+            const textArea = document.createElement( 'textarea' );
+
+            // Customize textArea
+            textArea.setAttribute( 'cols', '18' );
+            textArea.setAttribute( 'rows', '3' );
+
+            textArea.textContent = pOldText;
+            p.textContent = '';
+            p.append( textArea );
+
+            // Add event listener for every textarea is created by edit note .
+            textArea.addEventListener( 'keypress', ( e ) => {
+                if ( e.keyCode === 13 ) {
+                    noteApp.noteList[ noteID ].noteText = textArea.value;
+                    p.textContent = textArea.value;
+                }
+            } );
         }
     },
+
+    displayNoteTime() {
+        document.querySelector( this.DOMStrings.noteFooter ).textContent = moment().format(
+            'MMMM Do, h:mm:ss',
+        );
+    },
+};
+
+const dragNDrop = {
     dragOver( e ) {
         e.preventDefault();
     },
@@ -210,8 +243,15 @@ const DOM = {
         this.append( note );
         this.classList.remove( 'hovered' );
     },
-    displayNoteTime() {
-        document.querySelector( '.note-footer' ).textContent = moment().format( 'MMMM Do, h:mm:ss' );
+    dragStart( e ) {
+        handlers.note = e.target;
+        handlers.noteID = Number( e.target.id );
+
+        this.classList.add( 'hold' );
+    },
+
+    dragEnd( e ) {
+        this.classList.remove( 'hold' );
     },
 };
 
@@ -219,80 +259,57 @@ const handlers = {
     note: '',
     noteID: -1,
     getAllEvents() {
-        const emptyCells = Array.from( document.querySelectorAll( '.empty-cells' ) );
+        const emptyCells = Array.from( document.querySelectorAll( DOM.DOMStrings.emptyCells ) );
         const emptyDefaultCells = Array.from(
             document.querySelectorAll( DOM.DOMStrings.emptyDefaultCells ),
         );
-        const container = document.querySelector( '.container' );
 
-        const editModal = document.querySelector( '#edit-modal' );
-
-        editModal.addEventListener( 'keypress', ( e ) => {
-            // ! CREATE SEPERATE FUNCTION FOR THIS FEATURE 
-            const editInput = document.querySelector( '.edit-note-input' );
-            if ( e.keyCode === 13 ) {
-                noteApp.editNote( DOM.editNoteId, editInput.value );
-                const currentNote = document.getElementById( DOM.editNoteId );
-                
-                currentNote.children[ 1 ].innerHTML = editInput.value;
-                editInput.value = '';
-            }
-        } );
+        const noteInput = document.querySelector( '.note-app-input' );
 
         // EVENTLISTENERS WAITING FOR NOTE ICONS TO BE CLICKED
         document.addEventListener( 'click', ( e ) => {
             DOM.removeDOMNote( e );
             DOM.isCompletedDOMNote( e );
             DOM.isImportantDOMNote( e );
-            DOM.editDOMNote( e );
         } );
         // EVENTLISTENR WAITING FOR ENTER
-        container.addEventListener( 'keypress', ( e ) => {
+        noteInput.addEventListener( 'keypress', ( e ) => {
             if ( e.keyCode === 13 ) {
-                DOM.displayNotes();
+                if ( e.target.value !== '' ) {
+                    DOM.displayNotes();
+                }
             }
         } );
 
         // EVENTLISTENER FOR MODALS
-        window.addEventListener( 'click', ( e ) => {
-            const modal = document.querySelector( '.modal' );
-            if ( e.target.className.includes( 'modal' ) ) {
-                modal.classList.toggle( 'modal-show' );
-            }
-        } );
+
         // Drag and drop grid
         emptyCells.forEach( ( cell ) => {
-            cell.addEventListener( 'dragover', DOM.dragOver );
-            cell.addEventListener( 'dragenter', DOM.dragEnter );
-            cell.addEventListener( 'dragleave', DOM.dragLeave );
-            cell.addEventListener( 'drop', DOM.dragDrop );
+            cell.addEventListener( 'dragover', dragNDrop.dragOver );
+            cell.addEventListener( 'dragenter', dragNDrop.dragEnter );
+            cell.addEventListener( 'dragleave', dragNDrop.dragLeave );
+            cell.addEventListener( 'drop', dragNDrop.dragDrop );
         } );
         emptyDefaultCells.forEach( ( cell ) => {
-            cell.addEventListener( 'dragover', DOM.dragOver );
-            cell.addEventListener( 'dragenter', DOM.dragEnter );
-            cell.addEventListener( 'dragleave', DOM.dragLeave );
-            cell.addEventListener( 'drop', DOM.dragDrop );
+            cell.addEventListener( 'dragover', dragNDrop.dragOver );
+            cell.addEventListener( 'dragenter', dragNDrop.dragEnter );
+            cell.addEventListener( 'dragleave', dragNDrop.dragLeave );
+            cell.addEventListener( 'drop', dragNDrop.dragDrop );
         } );
     },
     dragNDrop() {
-        const notes = Array.from( document.querySelectorAll( '.notes' ) );
+        const notes = Array.from( document.querySelectorAll( DOM.DOMStrings.notes ) );
 
         notes.forEach( ( note ) => {
-            note.addEventListener( 'dragstart', dragStart );
-            note.addEventListener( 'dragend', dragEnd );
+            note.addEventListener( 'dragstart', dragNDrop.dragStart );
+            note.addEventListener( 'dragend', dragNDrop.dragEnd );
             note.setAttribute( 'draggable', true );
         } );
-
-        function dragStart( e ) {
-            handlers.note = e.target;
-            handlers.noteID = Number( e.target.id );
-
-            this.classList.add( 'hold' );
-        }
-
-        function dragEnd( e ) {
-            this.classList.remove( 'hold' );
-        }
+    },
+    editNoteEvent() {
+        document
+            .querySelector( DOM.DOMStrings.noteContent )
+            .addEventListener( 'dblclick', DOM.editNote );
     },
 };
 
@@ -301,3 +318,4 @@ function init() {
 }
 
 init();
+
