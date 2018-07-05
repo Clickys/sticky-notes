@@ -18,6 +18,7 @@
 
 body {
     font-size: 42.5%;
+    background-color: #151517;
 }
 h1,
 h2,
@@ -46,7 +47,7 @@ h6 {
 }
 
 .note-app:hover {
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6);
+    box-shadow: 2px 2px 5px rgba(255, 255, 255, 0.6);
     transform: translateY(-10px);
 }
 
@@ -57,16 +58,21 @@ h6 {
     padding: 2rem;
     width: 30rem;
     font-size: 1.5rem;
-    color: black;
+    color: #fff;
     background-color: transparent;
+    transition: all 1s;
 }
 
 .note-app input::placeholder {
     font-size: 2rem;
+    color: #fff;
 }
 
 .note-app input:hover {
     cursor: cell;
+}
+.note-app input:focus {
+    border-bottom: 2px solid #fff;
 }
 
 /* NOTE SECTION*/
@@ -80,8 +86,8 @@ h6 {
     min-height: calc(100vh - 163px);
     width: 40rem;
     max-width: 40rem;
-    background-color: rgba(0, 0, 0, 0.4);
-    box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.6);
+    background-color: rgba(157, 217, 210, 0.8);
+    box-shadow: 3px 3px 7px rgba(255, 255, 255, 0.7);
 }
 
 .notes {
@@ -197,9 +203,10 @@ h6 {
     align-content: space-around;
     min-height: calc(100vh - 163px);
     max-width: 40rem;
-    background-color: rgba(0, 255, 0, 0.4);
-    box-shadow: 3px 3px 7px rgba(0, 0, 0, 0.6);
+    background-color: rgba(253, 62, 129, 0.9);
+    box-shadow: 3px 3px 7px rgba(255, 255, 255, 0.6);
     text-align: center;
+    border: 2px;
 }
 .empty-cells {
     width: 200px;
@@ -220,12 +227,19 @@ h6 {
     border: 2px dashed rgba(0, 0, 0, 0.6);
 }
 
+.hover-white {
+    border: 2px dashed rgba(255, 255, 255, 0.8);
+}
 .empty-cells-default {
     width: 200px;
     height: 200px;
     margin: 3px;
 }
-
+.empty-trash-cells {
+    width: 200px;
+    height: 200px;
+    margin: 3px;
+}
 .completed-heading {
     font-size: 2rem;
     color: var(--dark-color);
@@ -244,7 +258,7 @@ h6 {
     height: 100%; /* Full height */
     overflow: auto; /* Enable scroll if needed */
     background-color: rgb(0, 0, 0); /* Fallback color */
-    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+    background-color: rgba(0, 0, 0, 0.8); /* Black w/ opacity */
 }
 .modal-show {
     display: block;
@@ -261,30 +275,21 @@ h6 {
 
 .modal-body {
     width: 80%;
+    height: 60%;
     text-align: center;
-}
-.edit-note-input {
-    outline: none;
-    border: none;
-    font-family: 'Shrikhand', cursive;
-    outline: 0;
-    border: 0;
-    padding: 2rem;
-    width: 50%;
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    background-color: transparent;
+    padding: 4rem;
+    box-shadow: 5px 10px 100px rgba(255, 255, 255, 0.4);
     position: relative;
-    transition: ease-in-out, all 1s ease-in-out;
+    display: flex;
 }
-.edit-note-input:focus {
-    width: 100%;
-    border-bottom: 3px solid red;
+
+.trash-icon-close {
+    position: absolute;
+    right: 0;
+    top: 0;
+    color: var(--primary-color);
 }
-.edit-note-input::placeholder {
-    color: #fff;
-    text-align: center;
-}
+/* EDIT NOTES */
 
 textarea {
     font-family: 'Open Sans Condensed', sans-serif;
@@ -295,4 +300,69 @@ textarea {
     font-size: 1.5rem;
     font-weight: 300;
     padding: 10px;
+}
+
+/* CONTROL PANEL SECTION */
+
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    margin-top: 2rem;
+}
+
+.trash-icon {
+    color: #02a7d7;
+    cursor: pointer;
+}
+
+.trash-icon:hover {
+    animation-name: shake;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+}
+
+/* SHAKE ANIMATION */
+
+@keyframes shake {
+    0% {
+        transform: translate(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    30% {
+        transform: translateX(5px);
+    }
+    35% {
+        transform: translateX(-5px);
+    }
+    40% {
+        transform: translateX(5px);
+    }
+
+    45% {
+        transform: translateX(5px);
+    }
+    50% {
+        transform: translateX(5px);
+    }
+    55% {
+        transform: translateX(-5px);
+    }
+    60% {
+        transform: translateX(5px);
+    }
+    65% {
+        transform: translateX(-5px);
+    }
+    70% {
+        transform: translateX(5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
+    100% {
+        transform: translateX(5px);
+    }
 }

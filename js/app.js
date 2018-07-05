@@ -22,6 +22,7 @@ class Note {
 
 const noteApp = {
     noteList: [],
+    trash: [],
 
     addNewNote( noteText, isImportant = false ) {
         const isCompleted = false;
@@ -68,6 +69,12 @@ const noteApp = {
     toggleIsImportant( position ) {
         this.noteList[ position ].isImportant = !this.noteList[ position ].isImportant;
         this.displayNotes();
+    },
+    addNoteToTrash( note ) {
+        const appNote = this.noteList[ note.id ];
+        const domNote = note;
+
+        DOM.addTrashNoteDOM( appNote, domNote );
     },
 };
 
@@ -214,6 +221,29 @@ const DOM = {
             } );
         }
     },
+    addTrashNoteDOM( appNote, domNote ) {
+        const emptyTrashCells = document.querySelectorAll( '.empty-trash-cells' );
+        let emptyCell;
+
+        emptyTrashCells.forEach( ( cell ) => {
+            if ( cell.innerHTML === '' ) {
+                emptyCell = cell;
+            }
+        } );
+
+        noteApp.trash.push( appNote );
+        emptyCell.append( domNote );
+    },
+
+    trashNotee( note, e ) {
+        console.log( note.parentElement );
+        const noteParent = note.parentElement; // Note parent .empty-cell
+        const noteID = Number( note.id );
+
+        noteApp.addNoteToTrash( note );
+
+        noteApp.removeNote( noteID );
+    },
 
     displayNoteTime() {
         document.querySelector( this.DOMStrings.noteFooter ).textContent = moment().format(
@@ -229,23 +259,32 @@ const dragNDrop = {
 
     dragEnter( e ) {
         e.preventDefault();
+        if ( e.target.className === 'empty-trash-cells' ) {
+            this.classList.add( 'hover-white' );
+        }
         this.classList.add( 'hovered' );
     },
 
-    dragLeave() {
+    dragLeave( e ) {
         this.classList.remove( 'hovered' );
+        this.classList.remove( 'hover-white' );
     },
 
-    dragDrop() {
-        const ID = handlers.note.id;
+    dragDrop( e ) {
+        const ID = handlers.activeNote.id;
         const note = document.getElementById( ID );
 
-        this.append( note );
-        this.classList.remove( 'hovered' );
+        if ( this.className === 'trash-icon' ) {
+            DOM.trashNotee( note, e );
+        } else {
+            this.append( note );
+            this.classList.remove( 'hovered' );
+            this.classList.remove( 'hover-white' );
+        }
     },
     dragStart( e ) {
-        handlers.note = e.target;
-        handlers.noteID = Number( e.target.id );
+        handlers.activeNote = e.target;
+        handlers.activeNoteID = Number( e.target.id );
 
         this.classList.add( 'hold' );
     },
@@ -256,22 +295,31 @@ const dragNDrop = {
 };
 
 const handlers = {
-    note: '',
-    noteID: -1,
+    activeNote: '',
+    ativeNoteID: -1,
     getAllEvents() {
         const emptyCells = Array.from( document.querySelectorAll( DOM.DOMStrings.emptyCells ) );
         const emptyDefaultCells = Array.from(
             document.querySelectorAll( DOM.DOMStrings.emptyDefaultCells ),
         );
+        const emptyTrashCells = Array.from( document.querySelectorAll( '.empty-trash-cells' ) );
+
+        const recycleBin = document.querySelector( '.trash-icon' );
 
         const noteInput = document.querySelector( '.note-app-input' );
 
         // EVENTLISTENERS WAITING FOR NOTE ICONS TO BE CLICKED
         document.addEventListener( 'click', ( e ) => {
+            const modal = document.querySelector( '#trash-modal' );
+
+            if ( e.target.className === 'modal-content' ) {
+                modal.classList.toggle( 'modal-show' );
+            }
             DOM.removeDOMNote( e );
             DOM.isCompletedDOMNote( e );
             DOM.isImportantDOMNote( e );
         } );
+
         // EVENTLISTENR WAITING FOR ENTER
         noteInput.addEventListener( 'keypress', ( e ) => {
             if ( e.keyCode === 13 ) {
@@ -283,6 +331,10 @@ const handlers = {
 
         // EVENTLISTENER FOR MODALS
 
+        recycleBin.addEventListener( 'dblclick', () => {
+            const trashModal = document.querySelector( '#trash-modal' );
+            trashModal.classList.toggle( 'modal-show' );
+        } );
         // Drag and drop grid
         emptyCells.forEach( ( cell ) => {
             cell.addEventListener( 'dragover', dragNDrop.dragOver );
@@ -290,12 +342,23 @@ const handlers = {
             cell.addEventListener( 'dragleave', dragNDrop.dragLeave );
             cell.addEventListener( 'drop', dragNDrop.dragDrop );
         } );
+
         emptyDefaultCells.forEach( ( cell ) => {
             cell.addEventListener( 'dragover', dragNDrop.dragOver );
             cell.addEventListener( 'dragenter', dragNDrop.dragEnter );
             cell.addEventListener( 'dragleave', dragNDrop.dragLeave );
             cell.addEventListener( 'drop', dragNDrop.dragDrop );
         } );
+
+        emptyTrashCells.forEach( ( cell ) => {
+            cell.addEventListener( 'dragover', dragNDrop.dragOver );
+            cell.addEventListener( 'dragenter', dragNDrop.dragEnter );
+            cell.addEventListener( 'dragleave', dragNDrop.dragLeave );
+            cell.addEventListener( 'drop', dragNDrop.dragDrop );
+        } );
+
+        recycleBin.addEventListener( 'dragover', dragNDrop.dragOver );
+        recycleBin.addEventListener( 'drop', dragNDrop.dragDrop );
     },
     dragNDrop() {
         const notes = Array.from( document.querySelectorAll( DOM.DOMStrings.notes ) );
@@ -318,4 +381,3 @@ function init() {
 }
 
 init();
-
